@@ -1,0 +1,6 @@
+VOCdevkit
+*.weights
+*.hdf5
+*.pyc
+*.tar
+**/__pycache__/
