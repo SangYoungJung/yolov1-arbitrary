@@ -1,7 +1,7 @@
 import argparse
-from keras.engine import Input
-from keras.models import Model
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 import os
 from models.model_tiny_yolov1 import model_tiny_yolov1
 from data_sequence import SequenceData
@@ -71,7 +71,7 @@ def _main(args):
     validation_generator = SequenceData(
         'val', datasets_path, input_shape, batch_size)
 
-    model.fit_generator(
+    model.fit(
         train_generator,
         steps_per_epoch=len(train_generator),
         epochs=30,

@@ -10,13 +10,13 @@ import os
 from collections import defaultdict
 
 import numpy as np
-from keras import backend as K
-from keras.layers import Input, Conv2D, MaxPooling2D, \
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, \
     Dense, Flatten, Dropout, Reshape, LeakyReLU, ReLU
 
-from keras.layers.normalization import BatchNormalization
-from keras.models import Model
-from keras.regularizers import l2
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.models import Model
+from tensorflow.keras.regularizers import l2
 
 
 parser = argparse.ArgumentParser(description='Darknet Yolov1-tiny To Keras Converter.')
