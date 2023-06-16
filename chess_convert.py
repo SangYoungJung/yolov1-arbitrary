@@ -34,15 +34,37 @@ def chess_write_yolo_format(location, image, bbox, classes):
     # Create a Image    
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.imwrite(location+'.png', image)
-    # Create a annotation as <object-class> <x> <y> <width> <height>
+
     if bbox is not None:
         with open(location+'.txt', "w") as file:
             for box in bbox:
-                msg = '{} {:.5f} {:.5f} {:.5f} {:.5f}\n'.format(classes.index(box[0]), 
-                                                                box[1][0], box[1][1], 
-                                                                box[1][2], box[1][3])
+                # msg = '{} {:.5f} {:.5f} {:.5f} {:.5f}\n'.format(classes.index(box[0]), 
+                #                                                 box[1][0], box[1][1], 
+                #                                                 box[1][2], box[1][3])
+                msg = '{},{},{},{},{}\n'.format(classes.index(box[0]), 
+                                                box[1][0], box[1][1], 
+                                                box[1][2], box[1][3])
                 file.writelines(msg)
         print(location, len(bbox))
+
+
+def chess_write_yolo_train_valid(location):
+    # 1. Load images
+    files = sorted(glob.glob(location + '/*.png'))
+    # 2. Split dataset into train and valid
+    train_save = location + 'chess-train.txt'
+    valid_save = location + 'chess-valid.txt'
+    np.random.seed(1001)
+    index = np.arange(0, len(files))
+    np.random.shuffle(index)
+    train = index[0:int(len(files) * 0.8)]
+    valid = index[len(train):]
+    # 3. Create a train 
+    with open(train_save, 'w') as f: 
+        for ii in train: f.write(files[ii].replace("\\", "/") + "\n")
+    # 4. Create a valid
+    with open(valid_save, 'w') as f:
+        for jj in valid: f.write(files[jj].replace("\\", "/") + "\n")
 
 
 def chess_piece_segmentation(location, rows, cols):
@@ -85,16 +107,16 @@ def chess_piece_augmentation(segmentations, h, w, rows, cols):
     img = np.zeros((h*rows, w*cols,3), dtype=np.uint8)
     for row in range(rows):
         for col in range(cols):
-            y0 = row * h   # top
-            y1 = y0  + h   # bottom
-            x0 = col * w    # left
-            x1 = x0  + w    # right
+            y0 = row * h # top
+            y1 = y0  + h # bottom
+            x0 = col * w # left
+            x1 = x0  + w # right
             id = row*rows + col
             name = str(list(segmentations[id].keys())[0]).strip()
             # print(str.ljust(str(id), 3), str.ljust(name,10), segmentations[id][name].shape)
             img[y0:y1, x0:x1] = segmentations[id][name]
-            # if len(name) != 0 : bbox.append({ 'piece':name,'x0':x0,'y0':y0,'x1':x1,'y1':y1 })
-            if len(name) != 0 : bbox.append([name,chess_to_yolo_bbox([x0,y0,x1,y1], h*rows, w*cols)])
+            if len(name) != 0 : bbox.append([name,(x0,y0,x1,y1)])
+            # if len(name) != 0 : bbox.append([name,chess_to_yolo_bbox([x0,y0,x1,y1], h*rows, w*cols)])
     return img, bbox
 
 
@@ -103,6 +125,7 @@ def chess_piece_augmentation(segmentations, h, w, rows, cols):
 #===============================================================================
 
 if __name__ == "__main__":
+    location = './data/dataset/'
     num_data = 512
     rows = 8
     cols = 8
@@ -111,8 +134,10 @@ if __name__ == "__main__":
     classes = [ list(entry.keys())[0] for entry in segmentations ] # Extract class
     classes = list(set(classes)) # Remove duplicated class
     classes = list(filter(None, classes)) # Remove empty class
-    chess_write_yolo_classes('./data/dataset/', classes)
+    chess_write_yolo_classes(location, classes)
 
     for idx in range(num_data):
         img, bbox = chess_piece_augmentation(segmentations, height, width, rows, cols)
-        chess_write_yolo_format('./data/dataset/i_{:08}'.format(idx), img, bbox, classes) 
+        chess_write_yolo_format(location+'/i_{:08}'.format(idx), img, bbox, classes) 
+    
+    chess_write_yolo_train_valid(location)
